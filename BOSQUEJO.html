@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hualca Ingenieros — Planner de Tareas</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Barlow+Condensed:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   VARIABLES — PALETA HUALCA INGENIEROS
+═══════════════════════════════════════════════ */
+:root {
+  /* Corporativos */
+  --orange:      #E8601C;
+  --orange-dark: #C04D14;
+  --orange-light:#F07A3A;
+  --orange-pale: #FFF0E8;
+  --charcoal:    #1C1C1C;
+  --charcoal2:   #2A2A2A;
+  --gray-dark:   #3D3D3D;
+  --gray-mid:    #6B6B6B;
+  --gray-light:  #AEAEAE;
+  --gray-pale:   #F4F4F4;
+  --white:       #FFFFFF;
+  --border:      #E0E0E0;
+  --border-dark: #C8C8C8;
+
+  /* Status colors */
+  --G: #2E7D32;
+  --G-bg: #E8F5E9;
+  --D: #1565C0;
+  --D-bg: #E3F2FD;
+  --V: #6A1B9A;
+  --V-bg: #F3E5F5;
+  --S: #E65100;
+  --S-bg: #FFF3E0;
+  --ERR: #C62828;
+  --ERR-bg: #FFEBEE;
+  --NUM-bg: #F5F5F5;
+
+  /* Layout */
+  --task-col: 200px;
+  --cell-w:   38px;
+  --row-h:    44px;
+  --header-h: 46px;
+}
+
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--gray-pale);
+  color: var(--charcoal);
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+button { cursor: pointer; font-family: inherit; }
+input  { font-family: inherit; }
+
+/* ═══════════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════════ */
+.topbar {
+  background: var(--charcoal);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-mark {
+  width: 36px; height: 36px;
+  background: var(--orange);
+  border-radius: 6px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+
+.logo-mark svg { width: 22px; height: 22px; fill: white; }
+
+.logo-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 0.5px;
+  color: var(--white);
+  line-height: 1.1;
+}
+
+.logo-sub {
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--orange-light);
+  text-transform: uppercase;
+  display: block;
+}
+
+.topbar-divider {
+  width: 1px; height: 28px;
+  background: var(--gray-dark);
+}
+
+.topbar-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--gray-light);
+  text-transform: uppercase;
+}
+
+.topbar-spacer { flex: 1; }
+
+.btn-add-project {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--orange);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn-add-project:hover  { background: var(--orange-dark); }
+.btn-add-project:active { transform: scale(0.97); }
+.btn-add-project .icon  { font-size: 18px; line-height: 1; }
+
+/* ── Controles globales de fecha ── */
+.global-date-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.global-date-controls .month-chip {
+  min-width: 120px;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════
+   PAGE LAYOUT
+═══════════════════════════════════════════════ */
+.page {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 100%;
+}
+
+/* ═══════════════════════════════════════════════
+   PROYECTO CARD
+═══════════════════════════════════════════════ */
+.proyecto-card {
+  background: var(--white);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  overflow: clip; /* clip respeta border-radius Y permite position:sticky dentro */
+  animation: slideIn 0.3s ease both;
+}
+
+@keyframes slideIn {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── Card header ── */
+.card-header {
+  background: var(--charcoal);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.card-header-accent {
+  width: 6px;
+  align-self: stretch;
+  background: var(--orange);
+  flex-shrink: 0;
+}
+
+.card-header-inner {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  flex-wrap: wrap;
+}
+
+.card-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--orange-light);
+  white-space: nowrap;
+}
+
+/* ── Select de proyecto ── */
+.project-select {
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+  background: rgba(255,255,255,0.07);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  border-radius: 7px;
+  outline: none;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23F07A3A' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+.project-select:hover  { border-color: rgba(255,255,255,0.35); background-color: rgba(255,255,255,0.1); }
+.project-select:focus  { border-color: var(--orange); }
+.project-select option { background: var(--charcoal); color: var(--white); font-weight: 500; }
+
+/* ── Select + input combo de tarea ── */
+/* ══ TASK COMBO — select que se convierte en input al elegir "Escribir otra..." ══ */
+.task-combo {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  height: 100%;
+}
+
+/* Select e input se alternan — ambos ocupan todo el ancho */
+.task-select,
+.task-custom-inp {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Barlow', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--charcoal);
+  padding: 0;
+}
+
+/* SELECT visible por defecto */
+.task-select {
+  display: block;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23C8C8C8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 2px center;
+  padding-right: 16px;
+}
+.task-select option { background: #fff; color: var(--charcoal); }
+.task-select option.opt-custom { color: var(--orange); font-style: italic; font-weight: 600; }
+
+/* INPUT oculto por defecto */
+.task-custom-inp {
+  display: none;
+  font-weight: 600;
+  padding-right: 20px;
+}
+.task-custom-inp::placeholder { color: var(--gray-light); font-weight: 400; font-style: italic; }
+
+/* Modo custom: intercambiar visibilidad */
+.task-combo.is-custom .task-select   { display: none; }
+.task-combo.is-custom .task-custom-inp { display: block; }
+
+/* Botón ↩ volver — siempre en el combo, visible solo en modo custom */
+.task-back-btn {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--gray-light);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 3px;
+  line-height: 1;
+  display: none;
+  border-radius: 3px;
+  transition: color 0.12s, background 0.12s;
+  z-index: 2;
+}
+.task-combo.is-custom .task-back-btn { display: block; }
+.task-back-btn:hover { color: var(--orange); background: var(--orange-pale); }
+
+.card-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.ctrl-select {
+  background: var(--charcoal2);
+  border: 1px solid var(--gray-dark);
+  color: var(--gray-light);
+  font-family: 'Barlow', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.ctrl-select:hover, .ctrl-select:focus { border-color: var(--orange); }
+.ctrl-select option { background: var(--charcoal); }
+
+.nav-btn {
+  background: none;
+  border: 1px solid var(--gray-dark);
+  color: var(--gray-light);
+  width: 28px; height: 28px;
+  border-radius: 5px;
+  display: grid; place-items: center;
+  font-size: 16px; line-height: 1;
+  transition: all 0.15s;
+}
+.nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+.month-chip {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--white);
+  min-width: 110px;
+  text-align: center;
+}
+
+.btn-remove-project {
+  background: rgba(239,68,68,0.06);
+  border: 1.5px solid rgba(239,68,68,0.35);
+  color: #e53935;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+  margin-left: 8px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(239,68,68,0.1);
+}
+.btn-remove-project:hover {
+  background: #e53935;
+  border-color: #e53935;
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(229,57,53,0.35);
+}
+.btn-remove-project:active { transform: scale(0.96); }
+.btn-remove-project .del-icon { font-size: 14px; line-height: 1; }
+
+/* ── Table wrapper ── */
+.table-wrapper {
+  width: 100%;
+  /* overflow intencional: none — no romper position sticky */
+}
+
+/* ════════════════════════════════
+   TABLA REAL — alineación perfecta
+   Usamos <table> vía CSS semántico:
+   .proj-table  → table
+   .proj-thead  → thead  (sticky)
+   .proj-tbody  → tbody
+   .proj-tr     → tr
+   .proj-th / .proj-td → th/td
+════════════════════════════════ */
+.proj-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;  /* columnas de ancho exacto */
+}
+
+/* Columna de nombre de tarea */
+.proj-table .col-name {
+  width: var(--task-col);
+}
+
+/* Columna de cada día: ancho calculado con JS via --day-w */
+.proj-table .col-day {
+  /* se sobreescribe inline con style */
+}
+
+/* ── THEAD — fila de encabezado de días ── */
+.proj-thead {
+  position: static;
+  background: #F8F8F8;
+}
+
+/* Sticky aplicado a cada th individualmente para sobrevivir overflow:hidden del card */
+.proj-thead th {
+  position: sticky;
+  top: 56px;
+  z-index: 10;
+  background: #F8F8F8;
+}
+
+/* Separador inferior del thead usando box-shadow (no border, para que sticky funcione) */
+.proj-thead tr {
+  border-top: 1px solid var(--border);
+}
+
+.proj-thead th {
+  box-shadow: 0 2px 0 var(--border-dark);
+}
+
+/* TH nombre de tarea */
+.th-name {
+  padding: 0 12px;
+  text-align: left;
+  vertical-align: middle;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gray-mid);
+  border-right: 2px solid var(--border-dark);
+  height: var(--header-h);
+  background: #F8F8F8;
+}
+
+/* TH día */
+.th-day {
+  text-align: center;
+  vertical-align: middle;
+  border-right: 1px solid var(--border);
+  height: var(--header-h);
+  background: #F8F8F8;
+  cursor: default;
+  padding: 0;
+}
+.th-day:last-child { border-right: none; }
+.th-day.is-today   { background: var(--orange-pale); }
+.th-day.is-weekend { background: #F4F4F4; }
+
+.th-day .dnum {
+  display: block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--charcoal);
+  line-height: 1;
+}
+.th-day.is-today .dnum   { color: var(--orange); }
+.th-day.is-weekend .dnum { color: var(--gray-mid); }
+
+.th-day .dletter {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--gray-light);
+  line-height: 1;
+  margin-top: 2px;
+}
+.th-day.is-today .dletter   { color: var(--orange-light); }
+.th-day.is-weekend .dletter { color: #CCC; }
+
+/* ── TBODY ── */
+.proj-tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.proj-tbody tr:hover { background: #FAFAFA; }
+
+/* TD nombre de tarea */
+.td-name {
+  border-right: 2px solid var(--border-dark);
+  vertical-align: middle;
+  padding: 0 8px 0 12px;
+  background: #FDFCFC;
+  height: var(--row-h);
+}
+
+.td-name-inner {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 100%;
+  overflow: visible;
+}
+
+.task-idx {
+  font-size: 10px;
+  color: var(--gray-light);
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 16px;
+}
+
+/* .task-name-inp reemplazado por .task-select + .task-custom-inp */
+
+.btn-del-task {
+  background: none;
+  border: none;
+  color: transparent;
+  font-size: 13px;
+  padding: 2px;
+  border-radius: 3px;
+  transition: all 0.12s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.proj-tbody tr:hover .btn-del-task { color: var(--gray-light); }
+.btn-del-task:hover { color: var(--ERR) !important; background: var(--ERR-bg); }
+
+/* TD día celda */
+.td-day {
+  text-align: center;
+  vertical-align: middle;
+  border-right: 1px solid var(--border);
+  padding: 2px;
+  height: var(--row-h);
+}
+.td-day:last-child { border-right: none; }
+.td-day.is-today-col   { background: rgba(232,96,28,0.04); }
+.td-day.is-weekend-col { background: #FAFAFA; }
+
+.cell-inp {
+  width: 90%;
+  height: 26px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--charcoal);
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-transform: uppercase;
+  padding: 0 2px;
+  display: inline-block;
+}
+
+.cell-inp:hover  { background: var(--gray-pale); border-color: var(--border-dark); }
+.cell-inp:focus  { background: var(--gray-pale); border-color: var(--orange); cursor: text; }
+
+.cell-inp.v-G   { background: var(--G-bg);   border-color: #A5D6A7; color: var(--G); }
+.cell-inp.v-D   { background: var(--D-bg);   border-color: #90CAF9; color: var(--D); }
+.cell-inp.v-V   { background: var(--V-bg);   border-color: #CE93D8; color: var(--V); }
+.cell-inp.v-S   { background: var(--S-bg);   border-color: #FFCC80; color: var(--S); }
+.cell-inp.v-num { background: var(--NUM-bg); border-color: var(--border-dark); color: var(--gray-dark); }
+.cell-inp.v-err { background: var(--ERR-bg); border-color: #EF9A9A; color: var(--ERR); animation: shake 0.25s ease; }
+
+@keyframes shake {
+  0%,100% { transform:translateX(0); }
+  30%      { transform:translateX(-3px); }
+  70%      { transform:translateX(3px); }
+}
+
+/* ── Empty state (sin tareas) ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 24px;
+  border-top: 1px solid var(--border);
+  background: #fafafa;
+}
+
+.empty-state-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--orange-pale);
+  border: 2px dashed rgba(232,96,28,0.35);
+  display: grid; place-items: center;
+  font-size: 20px;
+  color: var(--orange);
+}
+
+.empty-state-msg {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gray-mid);
+  text-align: center;
+  max-width: 380px;
+  line-height: 1.5;
+}
+
+/* ── Add task row ── */
+.add-task-row {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 12px;
+  gap: 8px;
+  cursor: pointer;
+  border-top: 1px dashed var(--border-dark);
+  background: #FCFCFC;
+  transition: background 0.12s;
+}
+.add-task-row:hover { background: var(--orange-pale); }
+
+.add-plus {
+  width: 20px; height: 20px;
+  border: 1.5px dashed rgba(232,96,28,0.5);
+  border-radius: 4px;
+  display: grid; place-items: center;
+  font-size: 14px;
+  color: var(--orange);
+  transition: all 0.12s;
+  flex-shrink: 0;
+}
+.add-task-row:hover .add-plus { background: var(--orange); border-color: var(--orange); color: white; }
+
+.add-label {
+  font-size: 12px;
+  color: var(--gray-mid);
+  font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════
+   LEGEND
+═══════════════════════════════════════════════ */
+.legend {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+
+.legend-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gray-mid);
+}
+
+.l-item {
+  display: flex; align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-dark);
+}
+
+.l-chip {
+  width: 24px; height: 22px;
+  border-radius: 4px;
+  display: grid; place-items: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid;
+}
+
+.l-sep { width: 1px; height: 16px; background: var(--border-dark); }
+
+/* ═══════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════ */
+.page-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--gray-light);
+  padding: 8px 0 24px;
+  font-weight: 500;
+}
+
+.page-footer span { color: var(--orange); font-weight: 700; }
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — MÓVIL
+═══════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  :root {
+    --task-col: 120px;
+    --row-h:    44px;
+    --header-h: 42px;
+    --cell-w:   34px;
+  }
+
+  .topbar { padding: 0 14px; gap: 8px; flex-wrap: wrap; height: auto; min-height: 56px; padding-top: 8px; padding-bottom: 8px; }
+  .global-date-controls .month-chip { display: none; }
+  .global-date-controls { gap: 6px; }
+  .logo-text { font-size: 14px; }
+  .logo-sub  { display: none; }
+  .topbar-divider, .topbar-title { display: none; }
+  .btn-add-project .txt { display: none; }
+  .btn-add-project { padding: 8px 10px; }
+
+  .page { padding: 14px 12px; gap: 16px; }
+
+  .card-header-inner { padding: 8px 10px; gap: 8px; }
+  .project-select { font-size: 12px; min-width: 120px; max-width: 200px; }
+
+  /* En móvil: la tabla tiene min-width fija y se hace scroll */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Desactivar sticky en móvil (no tiene sentido con scroll horizontal) */
+  .proj-thead th { position: static; box-shadow: none; border-bottom: 2px solid var(--border-dark); }
+  .th-name { font-size: 10px; }
+  .col-day { min-width: 32px; }
+  .cell-inp { height: 24px; font-size: 12px; }
+
+  .ctrl-select { font-size: 11px; padding: 4px 6px; }
+  .month-chip  { min-width: 90px; font-size: 12px; }
+
+  .legend { gap: 8px 12px; }
+  .l-item { font-size: 11px; }
+}
+
+@media (max-width: 400px) {
+  :root { --task-col: 90px; }
+  .task-idx { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     TOP BAR
+══════════════════════════════════ -->
+<nav class="topbar">
+  <a class="topbar-logo" href="https://www.hualcaingenieros.pe" target="_blank">
+    <div class="logo-mark">
+      <!-- H icon simplificado -->
+      <svg viewBox="0 0 24 24"><path d="M3 3h3v7h12V3h3v18h-3v-8H6v8H3V3z"/></svg>
+    </div>
+    <div class="logo-text">
+      HUALCA
+      <span class="logo-sub">Ingenieros</span>
+    </div>
+  </a>
+  <div class="topbar-divider"></div>
+  <span class="topbar-title">Planner de Tareas</span>
+  <div class="topbar-spacer"></div>
+  <!-- Controles globales de mes/año -->
+  <div class="global-date-controls">
+    <button class="nav-btn" id="globalPrev">&#8249;</button>
+    <span class="month-chip" id="globalMonthChip"></span>
+    <button class="nav-btn" id="globalNext">&#8250;</button>
+    <select class="ctrl-select" id="globalMonth"></select>
+    <select class="ctrl-select" id="globalYear"></select>
+  </div>
+  <div class="topbar-divider"></div>
+  <button class="btn-add-project" id="btnAddProject">
+    <span class="icon">+</span>
+    <span class="txt">Nuevo Proyecto</span>
+  </button>
+</nav>
+
+<!-- ══════════════════════════════════
+     PAGE CONTENT
+══════════════════════════════════ -->
+<main class="page" id="projectsContainer"></main>
+
+<!-- ══════════════════════════════════
+     LEYENDA
+══════════════════════════════════ -->
+<div class="page" style="padding-top:0">
+  <div class="legend">
+    <span class="legend-title">Valores</span>
+    <div class="l-item">
+      <div class="l-chip" style="background:var(--G-bg);border-color:#A5D6A7;color:var(--G)">G</div>
+      Ganado
+    </div>
+    <div class="l-item">
+      <div class="l-chip" style="background:var(--D-bg);border-color:#90CAF9;color:var(--D)">D</div>
+      Disponible
+    </div>
+    <div class="l-item">
+      <div class="l-chip" style="background:var(--V-bg);border-color:#CE93D8;color:var(--V)">V</div>
+      Vacaciones
+    </div>
+    <div class="l-item">
+      <div class="l-chip" style="background:var(--S-bg);border-color:#FFCC80;color:var(--S)">S</div>
+      Suspendido
+    </div>
+    <div class="l-sep"></div>
+    <div class="l-item">
+      <div class="l-chip" style="background:var(--NUM-bg);border-color:var(--border-dark);color:var(--gray-dark);font-size:10px">h</div>
+      Horas 1–12
+    </div>
+    <div class="l-sep"></div>
+    <div class="l-item" style="color:var(--gray-mid);font-size:11px">
+      💡 Celdas aceptan: G · D · V · S · o número del 1 al 12
+    </div>
+  </div>
+  <div class="page-footer">© 2025 <span>Hualca Ingenieros</span> — Ingeniería de Proyectos</div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   DATOS GLOBALES
+══════════════════════════════════ */
+const DAYS_SHORT = ['D','L','M','M','J','V','S'];
+const DAYS_FULL  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const MONTHS_ES  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const VALID_LETTERS = ['G','D','V','S'];
+
+// ── Opciones de los selects (simuladas — luego se conectarán a API) ──
+const PROJECT_OPTIONS = [
+  'Proyecto 1', 'Proyecto 2', 'Proyecto 3', 'Proyecto 4', 'Proyecto 5'
+];
+
+const TASK_OPTIONS = [
+  'Diseño', 'Desarrollo', 'Revisión', 'Reunión', 'Instalación',
+  'Supervisión', 'Entrega', 'Planificación', 'Pruebas', 'Documentación'
+];
+
+// ── Estado global de fecha (compartido por todos los proyectos) ──
+const now = new Date();
+let globalMonth = now.getMonth();
+let globalYear  = now.getFullYear();
+
+let projectCounter = 0;
+const projects = []; // {id, name, tasks:[{id,name}], cells:{key:val}}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+function init() {
+  buildGlobalDateControls();
+  addProject();
+  document.getElementById('btnAddProject').addEventListener('click', addProject);
+}
+
+/* ── Construye los selects globales del topbar ── */
+function buildGlobalDateControls() {
+  const selMonth = document.getElementById('globalMonth');
+  const selYear  = document.getElementById('globalYear');
+  const chip     = document.getElementById('globalMonthChip');
+
+  MONTHS_ES.forEach((m, i) => {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = m;
+    if (i === globalMonth) o.selected = true;
+    selMonth.appendChild(o);
+  });
+
+  for (let y = 2020; y <= 2035; y++) {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    if (y === globalYear) o.selected = true;
+    selYear.appendChild(o);
+  }
+
+  function updateChip() {
+    chip.textContent = `${MONTHS_ES[globalMonth]} ${globalYear}`;
+  }
+  updateChip();
+
+  document.getElementById('globalPrev').addEventListener('click', () => {
+    globalMonth--;
+    if (globalMonth < 0) { globalMonth = 11; globalYear--; }
+    selMonth.value = globalMonth;
+    selYear.value  = globalYear;
+    updateChip();
+    renderAllProjects();
+  });
+
+  document.getElementById('globalNext').addEventListener('click', () => {
+    globalMonth++;
+    if (globalMonth > 11) { globalMonth = 0; globalYear++; }
+    selMonth.value = globalMonth;
+    selYear.value  = globalYear;
+    updateChip();
+    renderAllProjects();
+  });
+
+  selMonth.addEventListener('change', () => {
+    globalMonth = parseInt(selMonth.value);
+    updateChip();
+    renderAllProjects();
+  });
+
+  selYear.addEventListener('change', () => {
+    globalYear = parseInt(selYear.value);
+    updateChip();
+    renderAllProjects();
+  });
+}
+
+function renderAllProjects() {
+  projects.forEach(p => renderProject(p));
+}
+
+function addProject() {
+  projectCounter++;
+  const p = {
+    id: projectCounter,
+    name: '',
+    tasks: [
+      { id: 1, name: 'Tarea 1' },
+      { id: 2, name: 'Tarea 2' },
+      { id: 3, name: 'Tarea 3' },
+    ],
+    taskCounter: 3,
+    cells: {}
+  };
+  projects.push(p);
+  renderProject(p);
+
+  // Scroll al nuevo proyecto
+  setTimeout(() => {
+    const card = document.getElementById(`proj-${p.id}`);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 60);
+}
+
+function removeProject(pid) {
+  const idx = projects.findIndex(p => p.id === pid);
+  if (idx !== -1) projects.splice(idx, 1);
+  const el = document.getElementById(`proj-${pid}`);
+  if (el) el.remove();
+}
+
+/* ══════════════════════════════════
+   RENDER PROJECT
+   Usa globalMonth / globalYear
+══════════════════════════════════ */
+function renderProject(p) {
+  const container = document.getElementById('projectsContainer');
+  let card = document.getElementById(`proj-${p.id}`);
+
+  if (!card) {
+    card = document.createElement('div');
+    card.className = 'proyecto-card';
+    card.id = `proj-${p.id}`;
+    container.appendChild(card);
+  }
+
+  const numDays = new Date(globalYear, globalMonth + 1, 0).getDate();
+  const today   = new Date();
+  const todayD  = (today.getFullYear() === globalYear && today.getMonth() === globalMonth)
+                  ? today.getDate() : -1;
+
+  // ── Header (sin controles de fecha — son globales) ──
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-header-accent"></div>
+      <div class="card-header-inner">
+        <span class="card-label">Proyecto</span>
+        <select class="project-select" data-pid="${p.id}">
+          <option value="" disabled ${!p.name ? 'selected' : ''}>— Seleccionar proyecto —</option>
+          ${PROJECT_OPTIONS.map(opt =>
+            `<option value="${opt}" ${p.name === opt ? 'selected' : ''}>${opt}</option>`
+          ).join('')}
+        </select>
+        <div class="card-controls">
+          <button class="btn-remove-project" data-pid="${p.id}" title="Eliminar proyecto"><span class="del-icon">🗑</span> Eliminar proyecto</button>
+        </div>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      ${buildTable(p, numDays, todayD)}
+    </div>
+    <div class="add-task-row" data-pid="${p.id}">
+      <div class="add-plus">+</div>
+      <span class="add-label">Agregar una tarea</span>
+    </div>
+  `;
+
+  bindCard(card, p);
+}
+
+/* ══════════════════════════════════
+   BUILD TABLE HTML — real <table>
+   table-layout: fixed garantiza que
+   cada columna tenga el mismo ancho
+   en header y en todas las filas.
+══════════════════════════════════ */
+function buildTable(p, numDays, todayD) {
+
+  // ── Sin tareas: retornar empty-state ──
+  if (p.tasks.length === 0) {
+    return `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <p class="empty-state-msg">Es necesario agregar una tarea para guardar la información</p>
+      </div>
+    `;
+  }
+
+  // ── <colgroup> para definir anchos exactos ──
+  let colgroup = `<col class="col-name" style="width:var(--task-col)">`;
+  for (let d = 1; d <= numDays; d++) {
+    colgroup += `<col class="col-day">`;
+  }
+
+  // ── <thead> ──
+  let theadCells = `<th class="th-name">Tarea</th>`;
+  for (let d = 1; d <= numDays; d++) {
+    const dow = new Date(globalYear, globalMonth, d).getDay();
+    const isWE = dow === 0 || dow === 6;
+    const isTd = d === todayD;
+    theadCells += `<th class="th-day${isTd ? ' is-today' : ''}${isWE ? ' is-weekend' : ''}"
+                       title="${DAYS_FULL[dow]} ${d}">
+      <span class="dnum">${d}</span>
+      <span class="dletter">${DAYS_SHORT[dow]}</span>
+    </th>`;
+  }
+
+  // ── <tbody> ──
+  let tbodyRows = '';
+  p.tasks.forEach((t, idx) => {
+    const isCustom = t.name && !TASK_OPTIONS.includes(t.name);
+    let tds = `<td class="td-name">
+      <div class="td-name-inner">
+        <span class="task-idx">${String(idx+1).padStart(2,'0')}</span>
+        <div class="task-combo${isCustom ? ' is-custom' : ''}" data-pid="${p.id}" data-tid="${t.id}">
+          <select class="task-select" data-pid="${p.id}" data-tid="${t.id}">
+            <option value="" disabled ${!t.name && !isCustom ? 'selected' : ''}>— Seleccionar —</option>
+            ${TASK_OPTIONS.map(opt =>
+              `<option value="${opt}" ${t.name === opt ? 'selected' : ''}>${opt}</option>`
+            ).join('')}
+            <option value="__custom__" class="opt-custom">✏ Escribir otra...</option>
+          </select>
+          <input class="task-custom-inp" type="text"
+                 placeholder="Escribe la tarea..."
+                 value="${isCustom ? escHtml(t.name) : ''}"
+                 data-pid="${p.id}" data-tid="${t.id}">
+          <button class="task-back-btn" data-pid="${p.id}" data-tid="${t.id}" title="Volver al listado">↩</button>
+        </div>
+        <button class="btn-del-task" data-pid="${p.id}" data-tid="${t.id}" title="Eliminar">✕</button>
+      </div>
+    </td>`;
+
+    for (let d = 1; d <= numDays; d++) {
+      const dow = new Date(globalYear, globalMonth, d).getDay();
+      const isWE = dow === 0 || dow === 6;
+      const isTd = d === todayD;
+      const key  = `${t.id}-${d}`;
+      const val  = p.cells[key] || '';
+      const cls  = getCellClass(val);
+      tds += `<td class="td-day${isTd ? ' is-today-col' : ''}${isWE ? ' is-weekend-col' : ''}">
+        <input class="cell-inp${cls ? ' '+cls : ''}" type="text" maxlength="2"
+               value="${escHtml(val)}"
+               data-pid="${p.id}" data-tid="${t.id}" data-day="${d}">
+      </td>`;
+    }
+
+    tbodyRows += `<tr>${tds}</tr>`;
+  });
+
+  return `
+    <table class="proj-table">
+      <colgroup>${colgroup}</colgroup>
+      <thead class="proj-thead"><tr>${theadCells}</tr></thead>
+      <tbody class="proj-tbody">${tbodyRows}</tbody>
+    </table>
+  `;
+}
+
+/* ══════════════════════════════════
+   BIND EVENTS
+══════════════════════════════════ */
+function bindCard(card, p) {
+  // Project select
+  const projSel = card.querySelector('.project-select');
+  if (projSel) {
+    projSel.addEventListener('change', e => {
+      p.name = e.target.value;
+    });
+  }
+
+  // Remove project
+  card.querySelector('.btn-remove-project').addEventListener('click', () => {
+    if (projects.length <= 1) return; // siempre al menos 1
+    if (confirm('¿Eliminar este proyecto?')) removeProject(p.id);
+  });
+
+  // Add task
+  card.querySelector('.add-task-row').addEventListener('click', () => {
+    p.taskCounter++;
+    p.tasks.push({ id: p.taskCounter, name: '' });
+    renderProject(p);
+    setTimeout(() => {
+      const sels = card.querySelectorAll('.task-select');
+      if (sels.length) sels[sels.length-1].focus();
+    }, 30);
+  });
+
+  // Task selects
+  card.querySelectorAll('.task-select').forEach(sel => {
+    sel.addEventListener('change', e => {
+      const tid       = parseInt(e.target.dataset.tid);
+      const t         = p.tasks.find(t => t.id === tid);
+      if (!t) return;
+      const combo     = e.target.closest('.task-combo');
+      const customInp = combo.querySelector('.task-custom-inp');
+      if (e.target.value === '__custom__') {
+        combo.classList.add('is-custom');
+        customInp.value = '';
+        t.name = '';
+        setTimeout(() => customInp.focus(), 50);
+      } else {
+        combo.classList.remove('is-custom');
+        customInp.value = '';
+        t.name = e.target.value;
+      }
+    });
+  });
+
+  // Task custom inputs
+  card.querySelectorAll('.task-custom-inp').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const tid = parseInt(e.target.dataset.tid);
+      const t   = p.tasks.find(t => t.id === tid);
+      if (t) t.name = e.target.value;
+    });
+  });
+
+  // Task back buttons (volver al select desde custom input)
+  card.querySelectorAll('.task-back-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const tid       = parseInt(e.target.dataset.tid);
+      const t         = p.tasks.find(t => t.id === tid);
+      if (!t) return;
+      const combo     = e.target.closest('.task-combo');
+      const sel       = combo.querySelector('.task-select');
+      const customInp = combo.querySelector('.task-custom-inp');
+      combo.classList.remove('is-custom');
+      customInp.value = '';
+      sel.value = '';
+      t.name = '';
+    });
+  });
+
+  // Delete task
+  card.querySelectorAll('.btn-del-task').forEach(btn => {
+    btn.addEventListener('click', () => {
+      p.tasks = p.tasks.filter(t => t.id !== parseInt(btn.dataset.tid));
+      renderProject(p);
+    });
+  });
+
+  // Cell inputs
+  card.querySelectorAll('.cell-inp').forEach(inp => {
+    inp.addEventListener('input', e => handleCellInput(e.target, p));
+    inp.addEventListener('blur',  e => applyCell(e.target, p, true));
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.target.blur(); }
+    });
+  });
+}
+
+/* ══════════════════════════════════
+   CELL LOGIC
+══════════════════════════════════ */
+function handleCellInput(inp, p) {
+  // Filtrar solo caracteres válidos
+  let raw = inp.value.toUpperCase().replace(/[^GDVS0-9]/g,'');
+  inp.value = raw;
+  p.cells[`${inp.dataset.tid}-${inp.dataset.day}`] = raw;
+  const cls = getCellClass(raw);
+  inp.className = 'cell-inp' + (cls ? ' '+cls : '');
+}
+
+function applyCell(inp, p, final) {
+  let v = inp.value.toUpperCase();
+  inp.value = v;
+  const key = `${inp.dataset.tid}-${inp.dataset.day}`;
+
+  // Si es número, validar rango
+  if (v && /^\d+$/.test(v)) {
+    const n = parseInt(v);
+    if (n < 1)  { v = '1';  inp.value = v; }
+    if (n > 12) { v = '12'; inp.value = v; }
+  }
+
+  p.cells[key] = v;
+  const cls = getCellClass(v, true);
+  inp.className = 'cell-inp' + (cls ? ' '+cls : '');
+}
+
+function getCellClass(val, strict = false) {
+  if (!val) return '';
+  const u = val.toUpperCase();
+  if (VALID_LETTERS.includes(u) && u.length === 1) return `v-${u}`;
+  if (/^\d+$/.test(val)) {
+    const n = parseInt(val);
+    if (n >= 1 && n <= 12) return 'v-num';
+    return strict ? 'v-err' : '';
+  }
+  return '';
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════════════════════════════════
+   START
+══════════════════════════════════ */
+init();
+</script>
+</body>
+</html>
