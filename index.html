@@ -587,6 +587,14 @@ input  { font-family: inherit; }
 .cell-inp:hover  { background: var(--gray-pale); border-color: var(--border-dark); }
 .cell-inp:focus  { background: var(--gray-pale); border-color: var(--orange); cursor: text; }
 
+/* Celda en modo navegación teclado — resaltado más visible */
+.cell-inp.kbd-active {
+  border-color: var(--orange) !important;
+  background: var(--orange-pale) !important;
+  box-shadow: 0 0 0 2px rgba(232,96,28,0.25);
+  outline: none;
+}
+
 .cell-inp.v-G   { background: var(--G-bg);   border-color: #A5D6A7; color: var(--G); }
 .cell-inp.v-D   { background: var(--D-bg);   border-color: #90CAF9; color: var(--D); }
 .cell-inp.v-V   { background: var(--V-bg);   border-color: #CE93D8; color: var(--V); }
@@ -2068,14 +2076,125 @@ function bindCard(card, p) {
     });
   });
 
-  // Cell inputs
+  // Cell inputs — con navegación por teclado
   card.querySelectorAll('.cell-inp').forEach(inp => {
-    inp.addEventListener('input', e => handleCellInput(e.target, p));
-    inp.addEventListener('blur',  e => applyCell(e.target, p, true));
-    inp.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.target.blur(); }
+    inp.addEventListener('focus', e => {
+      e.target.classList.add('kbd-active');
+      e.target.select();
     });
+    inp.addEventListener('blur', e => {
+      e.target.classList.remove('kbd-active');
+      applyCell(e.target, p, true);
+    });
+    inp.addEventListener('input', e => handleCellInput(e.target, p));
+    inp.addEventListener('keydown', e => navigateCell(e, card, p));
   });
+}
+
+/* ══════════════════════════════════
+   NAVEGACIÓN POR TECLADO EN CELDAS
+   ── Flechas: moverse entre celdas
+   ── Enter / Tab: avanzar derecha
+   ── Shift+Tab / Shift+Enter: retroceder izquierda
+   ── Escape: salir del área
+══════════════════════════════════ */
+function navigateCell(e, card, p) {
+  const inp = e.target;
+  const tid = parseInt(inp.dataset.tid);
+  const day = parseInt(inp.dataset.day);
+
+  // Obtener todos los cell-inp del card ordenados: primero por fila (tid), luego por día
+  const allCells = Array.from(card.querySelectorAll('.cell-inp'));
+
+  // Construir mapa de posición: { "tid-day": index }
+  const numDays = new Date(globalYear, globalMonth + 1, 0).getDate();
+  const taskIds = [...new Set(allCells.map(c => parseInt(c.dataset.tid)))];
+  const numRows = taskIds.length;
+  const numCols = numDays;
+
+  // Posición actual
+  const rowIdx = taskIds.indexOf(tid);
+  const colIdx = day - 1; // day es 1-based
+
+  function focusCell(r, c) {
+    if (r < 0 || r >= numRows || c < 0 || c >= numCols) return false;
+    const targetTid = taskIds[r];
+    const targetDay = c + 1;
+    const target = card.querySelector(
+      `.cell-inp[data-tid="${targetTid}"][data-day="${targetDay}"]`
+    );
+    if (target) {
+      target.focus();
+      target.select();
+      return true;
+    }
+    return false;
+  }
+
+  switch (e.key) {
+    case 'ArrowRight':
+      e.preventDefault();
+      // Si la celda tiene valor de 1 dígito, moverse; si está vacía también
+      if (!focusCell(rowIdx, colIdx + 1)) {
+        // borde derecho: ir a la siguiente fila, primera celda
+        focusCell(rowIdx + 1, 0);
+      }
+      break;
+
+    case 'ArrowLeft':
+      e.preventDefault();
+      if (!focusCell(rowIdx, colIdx - 1)) {
+        // borde izquierdo: ir a la fila anterior, última celda
+        focusCell(rowIdx - 1, numCols - 1);
+      }
+      break;
+
+    case 'ArrowDown':
+      e.preventDefault();
+      focusCell(rowIdx + 1, colIdx);
+      break;
+
+    case 'ArrowUp':
+      e.preventDefault();
+      focusCell(rowIdx - 1, colIdx);
+      break;
+
+    case 'Enter':
+      e.preventDefault();
+      applyCell(inp, p, true);
+      // Enter sin Shift → derecha; con Shift → izquierda
+      if (e.shiftKey) {
+        if (!focusCell(rowIdx, colIdx - 1)) focusCell(rowIdx - 1, numCols - 1);
+      } else {
+        if (!focusCell(rowIdx, colIdx + 1)) focusCell(rowIdx + 1, 0);
+      }
+      break;
+
+    case 'Tab':
+      // Dejar el Tab nativo pero contenerlo dentro del card
+      e.preventDefault();
+      applyCell(inp, p, true);
+      if (e.shiftKey) {
+        if (!focusCell(rowIdx, colIdx - 1)) focusCell(rowIdx - 1, numCols - 1);
+      } else {
+        if (!focusCell(rowIdx, colIdx + 1)) focusCell(rowIdx + 1, 0);
+      }
+      break;
+
+    case 'Escape':
+      // Salir del área de celdas completamente
+      inp.classList.remove('kbd-active');
+      inp.blur();
+      // Mover foco al nombre de la tarea de esa fila
+      const taskSel = card.querySelector(`.task-select[data-tid="${tid}"]`);
+      if (taskSel) taskSel.focus();
+      break;
+
+    default:
+      // Si escribe un valor y la celda ya tiene 1 char, auto-avanzar
+      // (lo maneja el input event; aquí solo si es un solo char válido)
+      break;
+  }
 }
 
 /* ══════════════════════════════════
@@ -2087,7 +2206,36 @@ function handleCellInput(inp, p) {
   inp.value = raw;
   p.cells[`${inp.dataset.tid}-${inp.dataset.day}`] = raw;
   const cls = getCellClass(raw);
-  inp.className = 'cell-inp' + (cls ? ' '+cls : '');
+  inp.className = 'cell-inp kbd-active' + (cls ? ' '+cls : '');
+
+  // Auto-avanzar al siguiente campo cuando:
+  // - Se ingresa una letra válida (G, D, V, S) → siempre 1 char
+  // - Se ingresa un número de 2 dígitos
+  const isLetter = VALID_LETTERS.includes(raw);
+  const isTwoDigit = /^\d{2}$/.test(raw);
+  if (isLetter || isTwoDigit) {
+    const card = inp.closest('.proyecto-card');
+    if (card) {
+      const tid     = parseInt(inp.dataset.tid);
+      const day     = parseInt(inp.dataset.day);
+      const numDays = new Date(globalYear, globalMonth + 1, 0).getDate();
+      const allCells = Array.from(card.querySelectorAll('.cell-inp'));
+      const taskIds  = [...new Set(allCells.map(c => parseInt(c.dataset.tid)))];
+      const rowIdx   = taskIds.indexOf(tid);
+      const colIdx   = day - 1;
+      const numRows  = taskIds.length;
+
+      function autoFocus(r, c) {
+        if (r < 0 || r >= numRows || c < 0 || c >= numDays) return;
+        const t = card.querySelector(`.cell-inp[data-tid="${taskIds[r]}"][data-day="${c+1}"]`);
+        if (t) { setTimeout(() => { t.focus(); t.select(); }, 30); }
+      }
+
+      // Avanzar derecha; si es borde, bajar a la siguiente fila
+      if (colIdx + 1 < numDays) autoFocus(rowIdx, colIdx + 1);
+      else autoFocus(rowIdx + 1, 0);
+    }
+  }
 }
 
 function applyCell(inp, p, final) {
