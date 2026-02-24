@@ -769,6 +769,533 @@ input  { font-family: inherit; }
   :root { --task-col: 90px; }
   .task-idx { display: none; }
 }
+
+/* ═══════════════════════════════════════════════
+   POPUP ADVERTENCIA MÓVIL
+═══════════════════════════════════════════════ */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 28, 28, 0.82);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeOverlay 0.3s ease both;
+}
+
+.mobile-overlay.active { display: flex; }
+
+@keyframes fadeOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mobile-popup {
+  background: var(--white);
+  border-radius: 16px;
+  max-width: 360px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  animation: slidePopup 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+@keyframes slidePopup {
+  from { opacity: 0; transform: translateY(32px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.popup-header {
+  background: var(--charcoal);
+  padding: 20px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.popup-header-stripe {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--orange), var(--orange-light));
+}
+
+.popup-icon {
+  width: 52px; height: 52px;
+  background: rgba(232,96,28,0.15);
+  border: 2px solid rgba(232,96,28,0.4);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 24px;
+}
+
+.popup-brand {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--orange-light);
+}
+
+.popup-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--white);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.popup-body {
+  padding: 20px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.popup-message {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--gray-dark);
+  text-align: center;
+}
+
+.popup-message strong {
+  color: var(--charcoal);
+  font-weight: 700;
+}
+
+.popup-devices {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.popup-device {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--gray-mid);
+}
+
+.popup-device .dev-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.popup-device.recommended .dev-icon { filter: drop-shadow(0 0 6px rgba(232,96,28,0.4)); }
+.popup-device.recommended span { color: var(--orange); }
+
+.popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-popup-continue {
+  background: none;
+  border: 1.5px solid var(--border-dark);
+  color: var(--gray-mid);
+  padding: 10px;
+  border-radius: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.btn-popup-continue:hover {
+  border-color: var(--gray-mid);
+  color: var(--charcoal);
+  background: var(--gray-pale);
+}
+
+.popup-note {
+  font-size: 11px;
+  color: var(--gray-light);
+  text-align: center;
+  line-height: 1.4;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   VISTA MÓVIL — cards de tarea con chips de días
+   Solo aplica a pantallas < 768px
+═══════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+
+  /* Ocultar la tabla de escritorio */
+  .table-wrapper { display: none !important; }
+  /* Mostrar el contenedor de tarjetas móvil */
+  .mobile-cards-wrapper { display: block !important; }
+
+  /* Topbar compacto */
+  .topbar {
+    padding: 0 14px;
+    gap: 8px;
+    height: auto;
+    min-height: 52px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .logo-sub, .topbar-divider, .topbar-title { display: none; }
+  .logo-text { font-size: 14px; }
+  .btn-add-project .txt { display: none; }
+  .btn-add-project { padding: 8px 10px; }
+  .global-date-controls .month-chip { display: none; }
+  .global-date-controls { gap: 6px; }
+  .ctrl-select { font-size: 11px; padding: 4px 6px; }
+
+  .page { padding: 12px; gap: 14px; }
+  .card-header-inner { padding: 8px 10px; gap: 8px; }
+  .project-select { font-size: 12px; min-width: 120px; max-width: 200px; }
+  .add-task-row { padding: 0 12px; }
+  .legend { gap: 8px 12px; }
+  .l-item { font-size: 11px; }
+}
+
+/* ── Contenedor móvil (oculto en desktop) ── */
+.mobile-cards-wrapper {
+  display: none;
+}
+
+/* ── Card de tarea móvil ── */
+.m-task-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  animation: fadeIn 0.25s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.m-task-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #FAFAFA;
+  border-bottom: 1px solid var(--border);
+}
+
+.m-task-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray-light);
+  flex-shrink: 0;
+  min-width: 18px;
+}
+
+.m-task-select-wrap {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.m-task-select,
+.m-task-custom-inp {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--charcoal);
+  padding: 0;
+}
+
+.m-task-select {
+  display: block;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23AEAEAE' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 2px center;
+  padding-right: 18px;
+}
+.m-task-select option { background: #fff; color: var(--charcoal); }
+.m-task-select option.opt-custom { color: var(--orange); font-style: italic; }
+
+.m-task-custom-inp {
+  display: none;
+  font-weight: 600;
+  padding-right: 22px;
+}
+.m-task-custom-inp::placeholder { color: var(--gray-light); font-weight: 400; font-style: italic; }
+
+.m-task-select-wrap.is-custom .m-task-select   { display: none; }
+.m-task-select-wrap.is-custom .m-task-custom-inp { display: block; }
+
+.m-task-back-btn {
+  position: absolute;
+  right: 0; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: var(--gray-light); font-size: 14px;
+  cursor: pointer; padding: 2px;
+  display: none; line-height: 1;
+  border-radius: 3px;
+}
+.m-task-select-wrap.is-custom .m-task-back-btn { display: block; }
+.m-task-back-btn:hover { color: var(--orange); }
+
+.m-task-del-btn {
+  background: none; border: none;
+  color: transparent;
+  font-size: 14px; cursor: pointer;
+  padding: 4px; border-radius: 4px;
+  flex-shrink: 0;
+  transition: all 0.12s;
+  line-height: 1;
+}
+.m-task-card:hover .m-task-del-btn { color: var(--gray-light); }
+.m-task-del-btn:hover { color: var(--ERR) !important; background: var(--ERR-bg); }
+
+/* ── Chips de días ── */
+.m-days-strip {
+  padding: 8px 10px;
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.m-days-strip::-webkit-scrollbar { display: none; }
+
+.m-day-chip {
+  flex-shrink: 0;
+  width: 40px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px 2px 4px;
+  gap: 2px;
+  transition: border-color 0.12s, background 0.12s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.m-day-chip:active { transform: scale(0.93); }
+
+.m-day-chip.is-today {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 2px rgba(232,96,28,0.15);
+}
+.m-day-chip.is-weekend {
+  background: #F9F9F9;
+}
+
+/* Estados de valor */
+.m-day-chip.val-G  { background: var(--G-bg);   border-color: #A5D6A7; }
+.m-day-chip.val-D  { background: var(--D-bg);   border-color: #90CAF9; }
+.m-day-chip.val-V  { background: var(--V-bg);   border-color: #CE93D8; }
+.m-day-chip.val-S  { background: var(--S-bg);   border-color: #FFCC80; }
+.m-day-chip.val-num{ background: var(--NUM-bg); border-color: var(--border-dark); }
+
+.m-chip-letter {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--gray-light);
+  line-height: 1;
+}
+.m-day-chip.is-today .m-chip-letter { color: var(--orange); }
+
+.m-chip-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--charcoal);
+  line-height: 1;
+}
+.m-day-chip.is-today .m-chip-num { color: var(--orange); }
+
+.m-chip-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  color: transparent; /* invisible si vacío */
+  min-height: 13px;
+  display: flex; align-items: center;
+}
+.m-day-chip.val-G  .m-chip-val { color: var(--G); }
+.m-day-chip.val-D  .m-chip-val { color: var(--D); }
+.m-day-chip.val-V  .m-chip-val { color: var(--V); }
+.m-day-chip.val-S  .m-chip-val { color: var(--S); }
+.m-day-chip.val-num .m-chip-val { color: var(--gray-dark); }
+
+
+/* ════════════════════════════════════════════
+   INLINE EDITOR — selector dentro de la card
+════════════════════════════════════════════ */
+.m-inline-editor {
+  display: none;
+  padding: 8px 10px 10px;
+  border-top: 1px solid var(--border);
+  background: #FAFAFA;
+  animation: editorIn 0.18s ease both;
+}
+.m-inline-editor.open { display: block; }
+
+@keyframes editorIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Cabecera del editor: muestra el día seleccionado */
+.ie-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.ie-day-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gray-mid);
+}
+.ie-close {
+  background: none; border: none;
+  color: var(--gray-light); font-size: 16px;
+  cursor: pointer; padding: 2px 4px;
+  border-radius: 4px; line-height: 1;
+}
+.ie-close:hover { color: var(--charcoal); background: var(--border); }
+
+/* Fila de botones G D V S */
+.ie-letter-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.ie-letter-btn {
+  height: 44px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s;
+}
+.ie-letter-btn:active { transform: scale(0.92); }
+.ie-letter-btn .il-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px; font-weight: 800; line-height: 1;
+}
+.ie-letter-btn .il-label {
+  font-size: 8px; font-weight: 600;
+  letter-spacing: 0.3px; text-transform: uppercase;
+  color: var(--gray-light); line-height: 1;
+}
+.ie-letter-btn[data-val="G"] { border-color: #A5D6A7; background: var(--G-bg); }
+.ie-letter-btn[data-val="G"] .il-val { color: var(--G); }
+.ie-letter-btn[data-val="G"].active { background: var(--G); border-color: var(--G); }
+.ie-letter-btn[data-val="G"].active .il-val,
+.ie-letter-btn[data-val="G"].active .il-label { color: white; }
+
+.ie-letter-btn[data-val="D"] { border-color: #90CAF9; background: var(--D-bg); }
+.ie-letter-btn[data-val="D"] .il-val { color: var(--D); }
+.ie-letter-btn[data-val="D"].active { background: var(--D); border-color: var(--D); }
+.ie-letter-btn[data-val="D"].active .il-val,
+.ie-letter-btn[data-val="D"].active .il-label { color: white; }
+
+.ie-letter-btn[data-val="V"] { border-color: #CE93D8; background: var(--V-bg); }
+.ie-letter-btn[data-val="V"] .il-val { color: var(--V); }
+.ie-letter-btn[data-val="V"].active { background: var(--V); border-color: var(--V); }
+.ie-letter-btn[data-val="V"].active .il-val,
+.ie-letter-btn[data-val="V"].active .il-label { color: white; }
+
+.ie-letter-btn[data-val="S"] { border-color: #FFCC80; background: var(--S-bg); }
+.ie-letter-btn[data-val="S"] .il-val { color: var(--S); }
+.ie-letter-btn[data-val="S"].active { background: var(--S); border-color: var(--S); }
+.ie-letter-btn[data-val="S"].active .il-val,
+.ie-letter-btn[data-val="S"].active .il-label { color: white; }
+
+/* Grilla de horas 1-12 */
+.ie-hours-label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--gray-light); margin-bottom: 5px;
+}
+.ie-hours-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.ie-hour-btn {
+  height: 34px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px; font-weight: 700;
+  color: var(--gray-dark);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s;
+}
+.ie-hour-btn:active  { transform: scale(0.9); }
+.ie-hour-btn.active  { background: var(--charcoal); border-color: var(--charcoal); color: white; }
+
+/* Botón limpiar */
+.ie-clear-btn {
+  width: 100%;
+  height: 34px;
+  border-radius: 7px;
+  border: 1.5px dashed var(--border-dark);
+  background: transparent; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--gray-mid);
+  transition: all 0.12s;
+}
+.ie-clear-btn:hover { border-color: var(--ERR); color: var(--ERR); background: var(--ERR-bg); }
+
 </style>
 </head>
 <body>
@@ -776,6 +1303,50 @@ input  { font-family: inherit; }
 <!-- ══════════════════════════════════
      TOP BAR
 ══════════════════════════════════ -->
+
+<!-- ══════════════════════════════════
+     POPUP ADVERTENCIA — SOLO MÓVIL
+══════════════════════════════════ -->
+<div class="mobile-overlay" id="mobileOverlay">
+  <div class="mobile-popup">
+    <div class="popup-header">
+      <div class="popup-header-stripe"></div>
+      <div class="popup-icon">⚠️</div>
+      <span class="popup-brand">Hualca Ingenieros</span>
+      <h2 class="popup-title">Experiencia no optimizada para móvil</h2>
+    </div>
+    <div class="popup-body">
+      <p class="popup-message">
+        Para garantizar la <strong>correcta visualización y registro de datos</strong>,
+        la Administración recomienda acceder a esta herramienta desde
+        una <strong>computadora o laptop</strong>.<br><br>
+        El uso en dispositivos móviles puede generar
+        <strong>errores o pérdida de información</strong>.
+      </p>
+      <div class="popup-devices">
+        <div class="popup-device recommended">
+          <span class="dev-icon">💻</span>
+          <span>Computadora</span>
+        </div>
+        <div class="popup-device recommended">
+          <span class="dev-icon">🖥️</span>
+          <span>Laptop</span>
+        </div>
+        <div class="popup-device">
+          <span class="dev-icon">📱</span>
+          <span>Móvil</span>
+        </div>
+      </div>
+      <div class="popup-actions">
+        <button class="btn-popup-continue" id="btnPopupContinue">
+          Ver versión móvil
+        </button>
+        <p class="popup-note">La vista móvil está optimizada como tarjetas interactivas. Para mayor precisión y productividad, se recomienda el uso en computadora.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <nav class="topbar">
   <a class="topbar-logo" href="https://www.hualcaingenieros.pe" target="_blank">
     <div class="logo-mark">
@@ -846,6 +1417,310 @@ input  { font-family: inherit; }
 </div>
 
 <script>
+
+/* ══════════════════════════════════
+   POPUP MÓVIL — mostrar si ancho < 768px
+══════════════════════════════════ */
+function initMobilePopup() {
+  const overlay = document.getElementById('mobileOverlay');
+  const btnContinue = document.getElementById('btnPopupContinue');
+
+  // Mostrar solo en móvil y solo una vez por sesión
+  const dismissed = sessionStorage.getItem('mobileDismissed');
+  if (!dismissed && window.innerWidth < 768) {
+    overlay.classList.add('active');
+  }
+
+  btnContinue.addEventListener('click', () => {
+    overlay.classList.remove('active');
+    sessionStorage.setItem('mobileDismissed', '1');
+  });
+
+  // También cerrar si hace tap fuera del popup
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) {
+      overlay.classList.remove('active');
+      sessionStorage.setItem('mobileDismissed', '1');
+    }
+  });
+}
+
+
+/* ══════════════════════════════════════════════════
+   VISTA MÓVIL — tarjetas con chips + inline editor
+══════════════════════════════════════════════════ */
+const isMobile = () => window.innerWidth < 768;
+
+/* ── Estado del inline editor activo ── */
+let ieState = { card: null, tid: null, day: null, p: null };
+
+/* ── Genera el HTML del inline editor (vacío, sin valor seleccionado) ── */
+function buildInlineEditorHTML(tid, day) {
+  const hoursHTML = Array.from({length:12}, (_,i) => {
+    const h = i + 1;
+    return `<button class="ie-hour-btn" data-val="${h}" data-tid="${tid}" data-day="${day}">${h}</button>`;
+  }).join('');
+
+  return `
+    <div class="m-inline-editor" data-tid="${tid}" data-day="${day}">
+      <div class="ie-header">
+        <span class="ie-day-label" id="ie-label-${tid}-${day}"></span>
+        <button class="ie-close" data-tid="${tid}" data-day="${day}">✕</button>
+      </div>
+      <div class="ie-letter-row">
+        <button class="ie-letter-btn" data-val="G" data-tid="${tid}" data-day="${day}">
+          <span class="il-val">G</span><span class="il-label">Ganado</span>
+        </button>
+        <button class="ie-letter-btn" data-val="D" data-tid="${tid}" data-day="${day}">
+          <span class="il-val">D</span><span class="il-label">Disponible</span>
+        </button>
+        <button class="ie-letter-btn" data-val="V" data-tid="${tid}" data-day="${day}">
+          <span class="il-val">V</span><span class="il-label">Vacaciones</span>
+        </button>
+        <button class="ie-letter-btn" data-val="S" data-tid="${tid}" data-day="${day}">
+          <span class="il-val">S</span><span class="il-label">Suspendido</span>
+        </button>
+      </div>
+      <div class="ie-hours-label">Horas (máx. 12)</div>
+      <div class="ie-hours-grid">${hoursHTML}</div>
+      <button class="ie-clear-btn" data-tid="${tid}" data-day="${day}">✕ Limpiar valor</button>
+    </div>`;
+}
+
+/* ── Renderiza todas las cards móviles de un proyecto ── */
+function renderMobileCards(p, card) {
+  if (!isMobile()) return;
+
+  const numDays = new Date(globalYear, globalMonth + 1, 0).getDate();
+  const today   = new Date();
+  const todayD  = (today.getFullYear() === globalYear && today.getMonth() === globalMonth)
+                  ? today.getDate() : -1;
+
+  let wrapper = card.querySelector('.mobile-cards-wrapper');
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.className = 'mobile-cards-wrapper';
+    card.querySelector('.table-wrapper').after(wrapper);
+  }
+
+  wrapper.innerHTML = p.tasks.length === 0
+    ? `<div class="empty-state">
+         <div class="empty-state-icon">📋</div>
+         <p class="empty-state-msg">Es necesario agregar una tarea para guardar la información</p>
+       </div>`
+    : p.tasks.map((t, idx) => {
+        const isCustom = t.name && !TASK_OPTIONS.includes(t.name);
+
+        const chipsHTML = Array.from({length: numDays}, (_, i) => {
+          const d   = i + 1;
+          const dow = new Date(globalYear, globalMonth, d).getDay();
+          const isWE = dow === 0 || dow === 6;
+          const isTd = d === todayD;
+          const key  = `${t.id}-${d}`;
+          const val  = p.cells[key] || '';
+          const valClass = val ? (VALID_LETTERS.includes(val) ? `val-${val}` : 'val-num') : '';
+          return `<div class="m-day-chip ${valClass}${isTd?' is-today':''}${isWE?' is-weekend':''}"
+                       data-pid="${p.id}" data-tid="${t.id}" data-day="${d}">
+            <span class="m-chip-letter">${DAYS_SHORT[dow]}</span>
+            <span class="m-chip-num">${d}</span>
+            <span class="m-chip-val">${val}</span>
+          </div>`;
+        }).join('');
+
+        return `<div class="m-task-card" data-pid="${p.id}" data-tid="${t.id}">
+          <div class="m-task-header">
+            <span class="m-task-num">${String(idx+1).padStart(2,'0')}</span>
+            <div class="m-task-select-wrap${isCustom?' is-custom':''}" data-pid="${p.id}" data-tid="${t.id}">
+              <select class="m-task-select" data-pid="${p.id}" data-tid="${t.id}">
+                <option value="" disabled ${!t.name&&!isCustom?'selected':''}>— Seleccionar tarea —</option>
+                ${TASK_OPTIONS.map(opt=>`<option value="${opt}" ${t.name===opt?'selected':''}>${opt}</option>`).join('')}
+                <option value="__custom__" class="opt-custom">✏ Escribir otra...</option>
+              </select>
+              <input class="m-task-custom-inp" type="text"
+                     placeholder="Escribe la tarea..."
+                     value="${isCustom ? t.name.replace(/"/g,'&quot;') : ''}"
+                     data-pid="${p.id}" data-tid="${t.id}">
+              <button class="m-task-back-btn" data-pid="${p.id}" data-tid="${t.id}">↩</button>
+            </div>
+            <button class="m-task-del-btn" data-pid="${p.id}" data-tid="${t.id}">✕</button>
+          </div>
+          <div class="m-days-strip" data-pid="${p.id}" data-tid="${t.id}">
+            ${chipsHTML}
+            ${Array.from({length: numDays}, (_, i) => buildInlineEditorHTML(t.id, i+1)).join('')}
+          </div>
+        </div>`;
+      }).join('');
+
+  bindMobileCards(p, wrapper);
+}
+
+/* ── Cierra cualquier editor inline abierto en una card ── */
+function closeAllEditors(wrapper) {
+  wrapper.querySelectorAll('.m-inline-editor.open').forEach(ed => ed.classList.remove('open'));
+}
+
+/* ── Abre el inline editor para el chip tocado ── */
+function openInlineEditor(p, wrapper, tid, day) {
+  // Cerrar el que estuviera abierto
+  closeAllEditors(wrapper);
+
+  const editor = wrapper.querySelector(`.m-inline-editor[data-tid="${tid}"][data-day="${day}"]`);
+  if (!editor) return;
+
+  // Actualizar etiqueta del día
+  const dow = new Date(globalYear, globalMonth, day).getDay();
+  const lbl = editor.querySelector(`#ie-label-${tid}-${day}`);
+  if (lbl) lbl.textContent = `${DAYS_FULL[dow]}, ${day} ${MONTHS_ES[globalMonth]}`;
+
+  // Marcar el valor activo
+  const current = p.cells[`${tid}-${day}`] || '';
+  editor.querySelectorAll('.ie-letter-btn, .ie-hour-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.val === current);
+  });
+
+  editor.classList.add('open');
+
+  // Scroll suave al editor
+  setTimeout(() => editor.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+}
+
+/* ── Aplica un valor desde el inline editor ── */
+function applyInlineValue(p, wrapper, tid, day, val) {
+  const key  = `${tid}-${day}`;
+  const prev = p.cells[key] || '';
+  // Toggle: si ya era ese valor, limpiar
+  const newVal = prev === val ? '' : val;
+  p.cells[key] = newVal;
+
+  // Actualizar botones activos en el editor
+  const editor = wrapper.querySelector(`.m-inline-editor[data-tid="${tid}"][data-day="${day}"]`);
+  if (editor) {
+    editor.querySelectorAll('.ie-letter-btn, .ie-hour-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.val === newVal);
+    });
+  }
+
+  // Actualizar chip visual
+  const chip = wrapper.querySelector(`.m-day-chip[data-tid="${tid}"][data-day="${day}"]`);
+  if (chip) {
+    chip.classList.remove('val-G','val-D','val-V','val-S','val-num');
+    const valSpan = chip.querySelector('.m-chip-val');
+    if (newVal) {
+      chip.classList.add(VALID_LETTERS.includes(newVal) ? `val-${newVal}` : 'val-num');
+      valSpan.textContent = newVal;
+    } else {
+      valSpan.textContent = '';
+    }
+  }
+}
+
+/* ── Bind de todos los eventos de las cards móviles ── */
+function bindMobileCards(p, wrapper) {
+  // Select de tarea
+  wrapper.querySelectorAll('.m-task-select').forEach(sel => {
+    sel.addEventListener('change', e => {
+      const tid = parseInt(e.target.dataset.tid);
+      const t   = p.tasks.find(t => t.id === tid);
+      if (!t) return;
+      const sw = e.target.closest('.m-task-select-wrap');
+      const ci = sw.querySelector('.m-task-custom-inp');
+      if (e.target.value === '__custom__') {
+        sw.classList.add('is-custom');
+        ci.value = ''; t.name = '';
+        setTimeout(() => ci.focus(), 50);
+      } else {
+        sw.classList.remove('is-custom');
+        ci.value = ''; t.name = e.target.value;
+      }
+    });
+  });
+
+  // Custom input tarea
+  wrapper.querySelectorAll('.m-task-custom-inp').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const tid = parseInt(e.target.dataset.tid);
+      const t   = p.tasks.find(t => t.id === tid);
+      if (t) t.name = e.target.value;
+    });
+  });
+
+  // Botón volver al select
+  wrapper.querySelectorAll('.m-task-back-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tid = parseInt(btn.dataset.tid);
+      const t   = p.tasks.find(t => t.id === tid);
+      if (!t) return;
+      const sw = btn.closest('.m-task-select-wrap');
+      sw.classList.remove('is-custom');
+      sw.querySelector('.m-task-custom-inp').value = '';
+      sw.querySelector('.m-task-select').value = '';
+      t.name = '';
+    });
+  });
+
+  // Eliminar tarea
+  wrapper.querySelectorAll('.m-task-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      p.tasks = p.tasks.filter(t => t.id !== parseInt(btn.dataset.tid));
+      renderProject(p);
+    });
+  });
+
+  // ── Chips: abrir inline editor ──
+  wrapper.querySelectorAll('.m-day-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const tid = parseInt(chip.dataset.tid);
+      const day = parseInt(chip.dataset.day);
+      const strip = chip.closest('.m-days-strip');
+      // Si el editor ya está abierto para este chip, cerrarlo (toggle)
+      const ed = strip.querySelector(`.m-inline-editor[data-tid="${tid}"][data-day="${day}"]`);
+      if (ed && ed.classList.contains('open')) {
+        ed.classList.remove('open');
+        return;
+      }
+      openInlineEditor(p, wrapper, tid, day);
+    });
+  });
+
+  // ── Inline editor: botones de letras ──
+  wrapper.querySelectorAll('.ie-letter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyInlineValue(p, wrapper, parseInt(btn.dataset.tid), parseInt(btn.dataset.day), btn.dataset.val);
+    });
+  });
+
+  // ── Inline editor: botones de horas ──
+  wrapper.querySelectorAll('.ie-hour-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyInlineValue(p, wrapper, parseInt(btn.dataset.tid), parseInt(btn.dataset.day), btn.dataset.val);
+    });
+  });
+
+  // ── Inline editor: botón limpiar ──
+  wrapper.querySelectorAll('.ie-clear-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tid = parseInt(btn.dataset.tid);
+      const day = parseInt(btn.dataset.day);
+      p.cells[`${tid}-${day}`] = '';
+      applyInlineValue(p, wrapper, tid, day, '');
+      // Forzar limpieza aunque era '' antes (no hay toggle)
+      p.cells[`${tid}-${day}`] = '';
+      const chip = wrapper.querySelector(`.m-day-chip[data-tid="${tid}"][data-day="${day}"]`);
+      if (chip) {
+        chip.classList.remove('val-G','val-D','val-V','val-S','val-num');
+        chip.querySelector('.m-chip-val').textContent = '';
+      }
+      const editor = wrapper.querySelector(`.m-inline-editor[data-tid="${tid}"][data-day="${day}"]`);
+      if (editor) editor.querySelectorAll('.ie-letter-btn, .ie-hour-btn').forEach(b => b.classList.remove('active'));
+    });
+  });
+
+  // ── Inline editor: botón cerrar ──
+  wrapper.querySelectorAll('.ie-close').forEach(btn => {
+    btn.addEventListener('click', () => closeAllEditors(wrapper));
+  });
+}
+
 /* ══════════════════════════════════
    DATOS GLOBALES
 ══════════════════════════════════ */
@@ -876,6 +1751,7 @@ const projects = []; // {id, name, tasks:[{id,name}], cells:{key:val}}
    INIT
 ══════════════════════════════════ */
 function init() {
+  initMobilePopup();
   buildGlobalDateControls();
   addProject();
   document.getElementById('btnAddProject').addEventListener('click', addProject);
@@ -1018,6 +1894,7 @@ function renderProject(p) {
   `;
 
   bindCard(card, p);
+  renderMobileCards(p, card);
 }
 
 /* ══════════════════════════════════
